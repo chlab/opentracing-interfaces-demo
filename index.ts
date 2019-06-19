@@ -1,15 +1,14 @@
-import {
-  Tracer as OpenTracer,
-  SpanOptions,
-  Span as OpenSpan,
-  SpanContext as OpenSpanContext
-} from "opentracing";
+import * as ot from "opentracing";
 
-class SpanContext extends OpenSpanContext {
-  spanId: string;
+/**
+ * Dummy custom implementation
+ */
+
+class SpanContext extends ot.SpanContext {
+  customField: string;
 }
 
-class Span extends OpenSpan {
+class Span extends ot.Span {
   __context: SpanContext;
 
   context(): SpanContext {
@@ -22,14 +21,23 @@ class Span extends OpenSpan {
   }
 }
 
-class Tracer extends OpenTracer {
-  startSpan(operationName: string, options: SpanOptions = {}): Span {
-    let parent: SpanContext;
-
-    // results in error:
-    // Property 'spanId' does not exist on type '() => SpanContext'
-    parent = (options.childOf as Span).context.spanId;
-
+class Tracer extends ot.Tracer {
+  startSpan(operationName: string, options: ot.SpanOptions = {}): Span {
     return new Span();
   }
+
+  scope() {
+    return "something";
+  }
 }
+
+/**
+ * Dummy client code
+ */
+
+ot.initGlobalTracer(new Tracer());
+const tracer = ot.globalTracer();
+
+const span = tracer.startSpan("test");
+const scope = tracer.scope();
+const spanId = span.context().spanId;
